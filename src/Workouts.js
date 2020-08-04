@@ -1,12 +1,12 @@
 import React from 'react';
-import { StyleSheet, Text, View, TouchableHighlight, ActivityIndicator, TouchableOpacity } from 'react-native';
+import { StyleSheet, Text, View, TouchableHighlight, ActivityIndicator, TouchableOpacity, Dimensions, Animated } from 'react-native';
 import { styles } from './styles/styles'
 import { NavigationContainer, useNavigation } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { Button, Card, IconButton, Title, Paragraph } from 'react-native-paper';
 import { ScrollView } from 'react-native-gesture-handler';
 import { ViewWorkout } from './ViewWorkout'
-import Animated from 'react-native-reanimated';
+// import Animated from 'react-native-reanimated';
 import { removeToken } from './Token'
 import Firebase from '../config/Firebase'
 import AddWorkoutButton from './Components/AddWorkoutButton'
@@ -14,13 +14,27 @@ import { bindActionCreators } from 'redux'
 import { connect } from 'react-redux'
 import { logout } from './redux/actions/user'
 import { getWorkouts } from './redux/actions/workouts'
-import Swipeable from 'react-native-swipeable-row';
-import SwipeableExample from './SwipeableExample'
+// import Swipeable from 'react-native-swipeable-row';
+import Swipeable, { SwipeListView } from 'react-native-swipe-list-view';
+// import SwipeableExample from './SwipeableExample'
+
+const getCircularReplacer = () => {
+  const seen = new WeakSet();
+  return (key, value) => {
+    if (typeof value === "object" && value !== null) {
+      if (seen.has(value)) {
+        return;
+      }
+      seen.add(value);
+    }
+    return value;
+  };
+};
 
 // const workouts = []
-const workouts = [
+let workouts = [
   {
-    'id': 1,
+    'key': 1,
     'name': 'Bench Press',
     'sets': [
     	{
@@ -57,7 +71,7 @@ const workouts = [
     'notes': 'max out last set'
   },
   {
-    'id': 2,
+    'key': 2,
     'name': 'Pull up',
     'sets': [
     	{
@@ -94,7 +108,7 @@ const workouts = [
     'notes': 'come all the way down'
   },
   {
-    'id': 3,
+    'key': 3,
     'name': 'Squat',
     'sets': [
     	{
@@ -184,19 +198,19 @@ const parseSets = (sets) => {
   return sets.length + ' sets';
 }
 
-function WorkoutItem(props, {onOpen, onClose}) {
+function WorkoutItem(props) {
   const navigation = useNavigation();
   return (
 
     // <SwipeRow>
-    <Swipeable 
-    rightActionActivationDistance={20}
-    rightButtons={[
-      <TouchableHighlight style={styles.deleteSwipeout}><Text style={styles.deleteSwipeoutMsg}>Delete</Text></TouchableHighlight>
-    ]}
-    onRightButtonsOpenRelease={props.onOpen}
-    onRightButtonsCloseRelease={props.onClose}
-    >
+    // <Swipeable 
+    // rightActionActivationDistance={20}
+    // rightButtons={[
+    //   <TouchableHighlight style={styles.deleteSwipeout}><Text style={styles.deleteSwipeoutMsg}>Delete</Text></TouchableHighlight>
+    // ]}
+    // onRightButtonsOpenRelease={props.onOpen}
+    // onRightButtonsCloseRelease={props.onClose}
+    // >
 
       <Card id={props.id} onPress={() => GoToWorkout(navigation, props.id)}>
         <Card.Content>
@@ -205,7 +219,7 @@ function WorkoutItem(props, {onOpen, onClose}) {
         </Card.Content>
       </Card>
 
-    </Swipeable>
+    // {/* </Swipeable> */}
   );
 }
 
@@ -216,8 +230,6 @@ class WorkoutList extends React.Component {
       workouts: this.props.workouts,
       workoutList: null,
       isLoading: true,
-      onOpen: this.props.onOpen,
-      onClose: this.props.onClose
     }
   }
   
@@ -228,7 +240,8 @@ class WorkoutList extends React.Component {
     // logout()
     getWorkouts();
 
-    // console.log('this.props.workouts', this.props.workouts)
+    console.log('this.props.', this.props.loginState)
+    console.log('this.props.workouts', this.props.workouts)
 
     this.setState({
       workouts: workouts,
@@ -236,6 +249,39 @@ class WorkoutList extends React.Component {
       isLoading: false
     });
   }
+  
+  deleteRow = (rowMap, rowKey) => {
+    rowMap[rowKey].closeRow()
+    const workoutUpdate = workouts.filter(i => i.key != rowKey)
+    // console.log(workouts.filter(i => i.key == rowKey))
+    // workouts.remove(i => i.key == rowKey)
+    workouts = workoutUpdate 
+    console.log(workoutUpdate)
+    // console.log(rowMap[data.item.id.toString()])
+    // rowMap[rowKey].closeRow()
+    // newData = data.filter( i => i == index)
+    // console.log(newData)
+  }
+    // const onSwipeValueChange = swipeData => {
+  //   const { id, value } = swipeData;
+  //   if (
+  //       value < -Dimensions.get('window').width &&
+  //       !this.animationIsRunning
+  //   ) {
+  //       this.animationIsRunning = true;
+  //       Animated.timing(rowTranslateAnimatedValues[key], {
+  //           toValue: 0,
+  //           duration: 200,
+  //           useNativeDriver: false,
+  //       }).start(() => {
+  //           const newData = [...listData];
+  //           const prevIndex = listData.findIndex(item => item.key === key);
+  //           newData.splice(prevIndex, 1);
+  //           setListData(newData);
+  //           this.animationIsRunning = false;
+  //       });
+  //   }
+  // };
 
   render() {
 
@@ -248,9 +294,6 @@ class WorkoutList extends React.Component {
                           name={workout.name} 
                           sets={workout.sets}
                           notes={workout.notes}
-                          onOpen={this.state.onOpen}
-                          onClose={this.state.onClose}
-                          // {...itemProps}
                         />);
 
 
@@ -266,6 +309,7 @@ class WorkoutList extends React.Component {
         </View>
       );
     }
+
     // if no workouts
     if (workouts.length == 0) {
     // if (this.props.workouts.length == 0) {
@@ -276,10 +320,39 @@ class WorkoutList extends React.Component {
       </View>
       );
     }
-
+    const workoutsKeyed = workouts.map(i => ({
+      'key': i.id,
+      'name': i.name,
+      'sets': i.sets,
+      'notes': i.notes
+    }))
+    // workout list
     return(
       <View>
-        { workoutList }
+        {/* { workoutList } */}
+        <SwipeListView
+          disableRightSwipe
+          data={workouts}
+          renderItem={ (data, rowMap) => 
+                        <WorkoutItem 
+                          id={data.item.id}
+                          name={data.item.name} 
+                          sets={data.item.sets}
+                          notes={data.item.notes}
+                        /> }
+          renderHiddenItem={ (data, rowMap) => (
+            <TouchableOpacity  
+              style={styles.deleteSwipeout}
+              onPress={ () => this.deleteRow(rowMap, data.item.key) }
+            >
+              <Text style={styles.deleteSwipeoutMsg}>
+                Delete
+              </Text>
+            </TouchableOpacity>
+            )}
+            // leftOpenValue={75}
+            rightOpenValue={-100}
+        />
         {/* <TouchableOpacity 
           style={{flex: 1, alignItems: 'center'}}
           onPress={() => this.props.logout()}
@@ -299,38 +372,17 @@ export default class WorkoutScreen extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      currentlyOpenSwipeable: null
+      // currentlyOpenSwipeable: null
     }
   }
 
-  handleScroll = () => {
-    const {currentlyOpenSwipeable} = this.state;
-
-    if (currentlyOpenSwipeable) {
-      currentlyOpenSwipeable.recenter();
-    }
-  };
-
-
   render() {
-
-    const {currentlyOpenSwipeable} = this.state;
-    const itemProps = {
-      onOpen: (event, gestureState, swipeable) => {
-        if (currentlyOpenSwipeable && currentlyOpenSwipeable !== swipeable) {
-          currentlyOpenSwipeable.recenter();
-        }
-
-        this.setState({currentlyOpenSwipeable: swipeable});
-      },
-      onClose: () => this.setState({currentlyOpenSwipeable: null})
-    };
 
     return (
       <View style={styles.container}>
         <ScrollView onScroll={this.handleScroll}>
             <View>
-                <ConnectedWorkoutList {...itemProps} />
+                <ConnectedWorkoutList />
             </View>
         </ScrollView>
         
@@ -360,7 +412,8 @@ const mapStateToProps = state => {
   return {
       user: state.user,
       loginState: state.loginState,
-      workouts: state.workouts
+      workouts: state.workouts,
+      workoutForm: state.workoutForm
   }
 }
 

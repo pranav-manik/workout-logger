@@ -39,8 +39,8 @@ export const getWorkouts = () => {
     }
 }
 
-export const addWorkout = () => {
-    return async (dispatch, getState) => {
+export const addWorkout = (workout) => {
+    return async (dispatch, getState, workout) => {
         try {
             const workout = []
             const workouts = getState().workouts
@@ -59,7 +59,7 @@ export const addWorkout = () => {
                 }
             })
             .catch(err => {
-                console.log('Error getting document', err);
+                console.log('Error adding document', err);
             });
 
             console.log('workouts', workouts)

@@ -56,7 +56,7 @@ export const styles = StyleSheet.create({
     },
     deleteSwipeoutMsg: {
       color: '#fff',
-      left: 18,
+      left: 300,
       fontWeight: 'bold',
     }
 
