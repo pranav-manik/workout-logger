@@ -1,9 +1,10 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { StyleSheet, Text, View, Button } from 'react-native';
 import { DataTable, Checkbox, Divider, TextInput, IconButton } from 'react-native-paper';
 import { Ionicons } from '@expo/vector-icons';
 import { styles } from '../styles/styles'
 import LiftCheckbox from './LiftCheckbox'
+import { connect, useSelector } from 'react-redux'
 
 
 function RemoveWorkoutButton(props) {
@@ -39,8 +40,25 @@ export function Table(props) {
     }
 
     const setsList = [];
+    const setsProp = useSelector(state => state.workoutForm.sets)
+
+    useEffect(() => {
+        setsProp.forEach( s => {
+            setsList.push(
+                <SetRow 
+                    setNbr={s.setNbr}
+                    reps={s.reps}
+                    weight={s.weight}
+                    removeWorkoutCallback={handleDelete}
+                    handleRepCallback={handleRepUpdate}
+                    handleWeightCallback={handleWeightUpdate}
+                />); 
+            }
+        );
+    }, [setsProp])
+
     
-    props.sets.forEach( s => {
+    setsProp.forEach( s => {
         setsList.push(
             <SetRow 
                 setNbr={s.setNbr}
@@ -53,10 +71,38 @@ export function Table(props) {
         }
     );
 
-    // const [setCount, addSet] = useState(1);
-
-    // AddSet = () => {
-    //     this.props.addTaskCallback()
+    // try {
+    //     setsProp.forEach( s => {
+    //         setsList.push(
+    //             <SetRow 
+    //                 setNbr={s.setNbr}
+    //                 reps={s.reps}
+    //                 weight={s.weight}
+    //                 removeWorkoutCallback={handleDelete}
+    //                 handleRepCallback={handleRepUpdate}
+    //                 handleWeightCallback={handleWeightUpdate}
+    //             />); 
+    //         }
+    //     );
+    // }
+    // catch(err) {
+    //     const sets = [{
+    //           "reps": "",
+    //           "setNbr": 1,
+    //           "weight": "",
+    //         }]
+    //     sets.forEach( s => {
+    //         setsList.push(
+    //             <SetRow 
+    //                 setNbr={s.setNbr}
+    //                 reps={s.reps}
+    //                 weight={s.weight}
+    //                 removeWorkoutCallback={handleDelete}
+    //                 handleRepCallback={handleRepUpdate}
+    //                 handleWeightCallback={handleWeightUpdate}
+    //             />); 
+    //         }
+    //     );
     // }
 
     return(
@@ -152,3 +198,18 @@ function SetRow(props) {
         );
     }
 }
+
+const mapDispatchToProps = dispatch => {
+    return bindActionCreators({  }, dispatch)
+}
+
+const mapStateToProps = state => {
+    return {
+        workoutForm: state.workoutForm
+    }
+}
+
+export default connect(
+    mapStateToProps,
+    mapDispatchToProps
+)(Table)

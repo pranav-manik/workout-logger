@@ -114,7 +114,10 @@ class Form extends React.Component {
         // this.setState({ sets: setsJoined })
     }
 
+    // clear form fields on open
     async componentWillMount() {
+        await this.props.updateWorkoutName(this.state.name)
+        await this.props.updateWorkoutNotes(this.state.notes)
         await this.props.updateSets(this.state.sets)
     }
 
@@ -151,16 +154,16 @@ class Form extends React.Component {
 
                 <Table
                     // sets={this.state.sets}
-                    sets={this.props.workoutForm.sets}
+                    // sets={this.props.workoutForm.sets}
                     AddWorkoutCallback={this.AddWorkoutCallback}
                     removeWorkoutCallback={this.handleDelete}
                     handleRepCallback={this.handleRepUpdate}
                     handleWeightCallback={this.handleWeightUpdate}
                 />
                 <IconButton icon="pencil-plus" style={{left: 300}} onPress={() => this.AddSet()} />
-                <Button title="add set" onPress={() => this.AddSet()} />
+                {/* <Button title="add set" onPress={() => this.AddSet()} /> */}
                 <TouchableOpacity style={styles.button} onPress={this.handleSignUp}>
-                    <Text style={styles.buttonText}>Add</Text>
+                    <Text style={styles.buttonText}>Submit</Text>
                 </TouchableOpacity>
                 <DoneBar
                     keyboardType={this.state.keyboardType}
